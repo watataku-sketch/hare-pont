@@ -14,29 +14,59 @@ function HarePontModel() {
 
 // --- 2. メインの3D表示画面 (MainViewer) ---
 function MainViewer({ onAboutClick }) {
+  // ブラウザの幅をチェックするための簡易的な仕組み
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 600;
+
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#ffffff' }}>
-      {/* ヘッダーロゴ */}
-      <div style={{ position: 'absolute', top: 50, left: 50, zIndex: 10 }}>
-        <h1 style={{ margin: 0, fontSize: '3.5rem', fontWeight: '900', color: '#0066cc', letterSpacing: '-0.05em' }}>
+    <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#ffffff', overflow: 'hidden' }}>
+      
+      {/* ヘッダーコンテナ：ここをレスポンシブ化！ */}
+      <div style={{ 
+        position: 'absolute', 
+        top: isMobile ? '20px' : '50px', 
+        left: 0, 
+        width: '100%', 
+        padding: isMobile ? '0 20px' : '0 50px',
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row', // スマホなら縦、PCなら横
+        justifyContent: 'space-between', 
+        alignItems: isMobile ? 'flex-start' : 'center',
+        zIndex: 10,
+        boxSizing: 'border-box',
+        pointerEvents: 'none' // 下の3D操作を邪魔しない
+      }}>
+        {/* ロゴ */}
+        <h1 style={{ 
+          margin: 0, 
+          fontSize: isMobile ? '2rem' : '3.5rem', // スマホでは小さく
+          fontWeight: '900', 
+          color: '#0066cc',
+          letterSpacing: '-0.05em',
+          pointerEvents: 'auto'
+        }}>
           ハレポン
         </h1>
-      </div>
 
-      {/* 右上：Aboutボタン */}
-      <button 
-        onClick={onAboutClick}
-        style={{
-          position: 'absolute', top: 50, right: 50, zIndex: 20,
-          background: 'none', border: '1px solid #0066cc', color: '#0066cc',
-          padding: '12px 24px', borderRadius: '30px', cursor: 'pointer',
-          fontWeight: 'bold', fontSize: '1rem', transition: '0.3s'
-        }}
-        onMouseEnter={(e) => (e.target.style.background = '#f0f7ff')}
-        onMouseLeave={(e) => (e.target.style.background = 'none')}
-      >
-        ハレポンとは？
-      </button>
+        {/* Aboutボタン */}
+        <button 
+          onClick={onAboutClick}
+          style={{
+            marginTop: isMobile ? '10px' : '0', // スマホでロゴの下に少し隙間
+            background: 'white', // スマホで文字が見やすいように背景を白に
+            border: '1px solid #0066cc', color: '#0066cc',
+            padding: isMobile ? '8px 16px' : '12px 24px', 
+            borderRadius: '30px', cursor: 'pointer',
+            fontWeight: 'bold', fontSize: isMobile ? '0.8rem' : '1rem', 
+            transition: '0.3s',
+            pointerEvents: 'auto',
+            boxShadow: isMobile ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
+          }}
+          onMouseEnter={(e) => (e.target.style.background = '#f0f7ff')}
+          onMouseLeave={(e) => (e.target.style.background = 'white')}
+        >
+          ハレポンとは？
+        </button>
+      </div>
 
       {/* 3Dキャンバス */}
       <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 4], fov: 40 }}>
@@ -49,12 +79,13 @@ function MainViewer({ onAboutClick }) {
         <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.75} />
       </Canvas>
 
-      <div style={{ position: 'absolute', bottom: 40, width: '100%', textAlign: 'center', color: '#ccc', fontSize: '0.75rem' }}>
+      <div style={{ position: 'absolute', bottom: isMobile ? 20 : 40, width: '100%', textAlign: 'center', color: '#ccc', fontSize: '0.6rem' }}>
         © 2026 HARE-PONT PROJECT. ALL RIGHTS RESERVED.
       </div>
     </div>
   )
 }
+
 // --- 3. 説明ページ (AboutPage / LP) ---
 function AboutPage({ onBackClick }) {
   // すべてのボックスで使い回す共通スタイル
