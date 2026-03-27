@@ -1,6 +1,20 @@
 import React, { Suspense, useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, useGLTF, Stage } from '@react-three/drei'
+import { OrbitControls, useGLTF, Stage, useProgress, Html } from '@react-three/drei'
+
+function Loader() {
+  const { progress } = useProgress()
+  return (
+    <Html center>
+      <div style={{ color: '#0066cc', fontWeight: 'bold', width: '200px', textAlign: 'center' }}>
+        <div style={{ width: '100%', height: '4px', background: '#eee', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{ width: `${progress}%`, height: '100%', background: '#0066cc', transition: '0.3s' }} />
+        </div>
+        <p>Loading... {Math.round(progress)}%</p>
+      </div>
+    </Html>
+  )
+}
 
 // --- 1. 3Dモデルコンポーネント ---
 function HarePontModel() {
@@ -54,7 +68,7 @@ function MainViewer({ onAboutClick }) {
       {/* ★ 3D Canvas：カメラ設定を最適化 ★ */}
       <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 45 }}>
         <color attach="background" args={['#ffffff']} />
-        <Suspense fallback={null}>
+       <Suspense fallback={<Loader />}>
           {/* Stageの adjustCamera={1.8} と center で位置を完璧に固定 */}
           <Stage 
             environment="city" 
