@@ -187,10 +187,6 @@ function AboutPage({ onBackClick }) {
           ハレポンは、三方がハレやかになるサイクルを目指します。<br/>
           重症化前に来院が増えることで、院内の空気までも明るく変えていく。
         </p>
-        <h3 style={{ fontSize: '2.4rem', fontWeight: '900', color: '#0066cc', margin: '30px 0', lineHeight: '1.2' }}>
-          <div style={{ marginBottom: '10px' }}>予防して、</div>
-          <div>晴れやかに。</div>
-        </h3>
         <p style={{ fontSize: '0.85rem', color: '#666', lineHeight: '1.7', maxWidth: '300px', margin: '0 auto' }}>
           私たちは、歯科医療を「痛くなってから行く場所」から、
           「人生を晴れやかにするために行く場所」へアップデートします。
