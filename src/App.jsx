@@ -7,7 +7,8 @@ function HarePontModel() {
   const { scene } = useGLTF('/tooth_model.glb')
   return (
     <group>
-      <primitive object={scene} scale={1.5} />
+      {/* scaleを1に。位置調整はStageコンポーネントに自動で任せるのが最も安定します */}
+      <primitive object={scene} scale={1} />
     </group>
   )
 }
@@ -24,6 +25,7 @@ function MainViewer({ onAboutClick }) {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#ffffff', overflow: 'hidden' }}>
+      {/* ヘッダーロゴ & ボタン */}
       <div style={{ 
         position: 'absolute', top: isMobile ? 20 : 40, left: isMobile ? 15 : 40, 
         width: isMobile ? 'calc(100% - 30px)' : 'auto',
@@ -49,14 +51,31 @@ function MainViewer({ onAboutClick }) {
         </button>
       </div>
 
-      <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 4], fov: 40 }}>
+      {/* ★ 3D Canvas：カメラ設定を最適化 ★ */}
+      <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 45 }}>
         <color attach="background" args={['#ffffff']} />
         <Suspense fallback={null}>
-          <Stage environment="city" intensity={0.5} contactShadow={{ opacity: 0.4, blur: 2 }}>
+          {/* Stageの adjustCamera={1.8} と center で位置を完璧に固定 */}
+          <Stage 
+            environment="city" 
+            intensity={0.5} 
+            contactShadow={{ opacity: 0.4, blur: 2 }}
+            adjustCamera={1.8} 
+            center
+          >
             <HarePontModel />
           </Stage>
         </Suspense>
-        <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.75} />
+
+        {/* ★ OrbitControls：ズーム制限と平行移動禁止を追加 ★ */}
+        <OrbitControls 
+          makeDefault 
+          minDistance={3}    // これ以上近づけない（アップ防止）
+          maxDistance={10}   // これ以上遠ざけない
+          enablePan={false}  // モデルが画面外に逃げないように固定
+          minPolarAngle={0} 
+          maxPolarAngle={Math.PI / 1.75} 
+        />
       </Canvas>
 
       <div style={{ position: 'absolute', bottom: 20, width: '100%', textAlign: 'center', color: '#ccc', fontSize: '0.65rem' }}>
@@ -154,7 +173,7 @@ function AboutPage({ onBackClick }) {
           </div>
           <div style={{ textAlign: 'left', background: 'white', padding: '25px', borderRadius: '20px' }}>
             <h3 style={{ borderLeft: '5px solid #0066cc', paddingLeft: '15px', fontSize: '1.1rem', color: '#0066cc', margin: '0 0 10px 0' }}>悪い部分の表示</h3>
-            <p style={{ color: '#666', fontSize: '0.85rem', lineHeight: '1.6' }}>どこが虫歯なのかを3Dで再現。「放置する恐怖」を可視化し、早期通院の動機付けを強化します。（準備中の機能）</p>
+            <p style={{ color: '#666', fontSize: '0.85rem', lineHeight: '1.6' }}>どこが虫歯なのかを3Dで再現。「放置する恐怖」を可視化し、早期通院の動機付けを強化します。</p>
           </div>
         </div>
       </div>
