@@ -206,6 +206,23 @@ function AboutPage({ onBackClick }) {
           「人生を晴れやかにするために行く場所」へアップデートします。
         </p>
       </div>
+
+{/* 6. Disclaimer Section (免責事項) */}
+      <div style={{ ...commonBoxStyle, background: '#f9f9f9', textAlign: 'left', padding: '30px' }}>
+        <h2 style={{ fontSize: '1.1rem', color: '#666', marginBottom: '20px', textAlign: 'center' }}>
+          【本システムのご利用にあたって】
+        </h2>
+        <p style={{ fontSize: '0.8rem', color: '#777', lineHeight: '1.6', marginBottom: '20px' }}>
+          本サービス「ハレポン」（以下「本システム」）は、歯科医師による診断結果を患者様へ視覚的に分かりやすく伝えるための<b>インフォームド・コンセント（説明補助）用コミュニケーションツール</b>です。ご利用に際しては、以下の事項に同意いただいたものとみなします。
+        </p>
+        <ul style={{ fontSize: '0.8rem', color: '#777', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
+          <li style={{ marginBottom: '10px' }}><b>非医療機器の明示:</b> 本システムは、画像診断、疾患の特定、または治療方針の決定を自動で行う「医療機器」ではありません。</li>
+          <li style={{ marginBottom: '10px' }}><b>医師の責任:</b> 本システムを用いた説明内容および最終的な診断、治療方針の決定は、必ず歯科医師自らの専門的知見と責任において行ってください。</li>
+          <li style={{ marginBottom: '10px' }}><b>免責事項:</b> 本システムの使用により生じた直接的、間接的な損害（診断の誤解、治療トラブル等）について、開発者は一切の責任を負いません。</li>
+          <li><b>試作版の扱い:</b> 本システムは現在開発中のプロトタイプ（ベータ版）であり、予告なく仕様変更やサービス停止を行う場合があります。</li>
+        </ul>
+      </div>
+
     </div>
   )
 }
