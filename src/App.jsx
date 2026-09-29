@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useEffect } from 'react'
+import React, { Suspense, useState, useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF, Stage, useProgress, Html, Center } from '@react-three/drei'
 
@@ -17,7 +17,7 @@ function Loader() {
   )
 }
 
-// --- 3Dモデル（Centerで確実にど真ん中へ固定） ---
+// --- 3Dモデル ---
 function HarePontModel() {
   const { scene } = useGLTF('/tooth_model.glb')
   return (
@@ -30,6 +30,7 @@ function HarePontModel() {
 export default function App() {
   const [showAbout, setShowAbout] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const controlsRef = useRef()
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
@@ -37,6 +38,29 @@ export default function App() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // ズーム制御関数（プラスで拡大、マイナスで縮小）
+  const handleZoomIn = () => {
+    if (controlsRef.current) {
+      const controls = controlsRef.current
+      controls.dollyOut(1.2) // 拡大（カメラを近づける）
+      controls.update()
+    }
+  }
+
+  const handleZoomOut = () => {
+    if (controlsRef.current) {
+      const controls = controlsRef.current
+      controls.dollyIn(1.2) // 縮小（カメラを遠ざける）
+      controls.update()
+    }
+  }
+
+  const handleReset = () => {
+    if (controlsRef.current) {
+      controlsRef.current.reset()
+    }
+  }
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#0a0b0e', overflow: 'hidden', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -80,7 +104,7 @@ export default function App() {
         </button>
       </div>
 
-      {/* 3. 3Dキャンバス（完全に中央固定） */}
+      {/* 3. 3Dキャンバス */}
       <Canvas
         camera={{ position: [0, 0, 4.5], fov: 45 }}
         style={{ width: '100%', height: '100%' }}
@@ -99,6 +123,7 @@ export default function App() {
         </Suspense>
 
         <OrbitControls
+          ref={controlsRef}
           makeDefault
           enablePan={false}
           minDistance={2.5}
@@ -108,35 +133,77 @@ export default function App() {
         />
       </Canvas>
 
-      {/* 4. 操作ガイド（フッター） */}
+      {/* ★ 4. 右下：ズーム＆リセット操作コントロール ★ */}
+      <div style={{
+        position: 'absolute', bottom: isMobile ? 60 : 30, right: 24, zIndex: 10,
+        display: 'flex', flexDirection: 'column', gap: '8px'
+      }}>
+        <button
+          onClick={handleZoomIn}
+          title="拡大"
+          style={{
+            width: '38px', height: '38px', borderRadius: '10px',
+            background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)',
+            color: '#fff', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(8px)', transition: '0.2s'
+          }}
+        >
+          ＋
+        </button>
+        <button
+          onClick={handleZoomOut}
+          title="縮小"
+          style={{
+            width: '38px', height: '38px', borderRadius: '10px',
+            background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)',
+            color: '#fff', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(8px)', transition: '0.2s'
+          }}
+        >
+          －
+        </button>
+        <button
+          onClick={handleReset}
+          title="位置リセット"
+          style={{
+            width: '38px', height: '38px', borderRadius: '10px',
+            background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)',
+            color: '#888', fontSize: '0.65rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(8px)', transition: '0.2s', fontWeight: 'bold'
+          }}
+        >
+          RESET
+        </button>
+      </div>
+
+      {/* 5. 下部操作ガイド文（マウスホイール・ピンチを明記） */}
       <div style={{
         position: 'absolute', bottom: 20, left: 0, width: '100%',
         textAlign: 'center', pointerEvents: 'none', zIndex: 5,
-        display: 'flex', justifyContent: 'center', gap: '15px'
+        display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap', padding: '0 10px'
       }}>
-        <span style={{ fontSize: '0.7rem', color: '#666', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          • Drag to 360° Rotate
+        <span style={{ fontSize: '0.7rem', color: '#777', letterSpacing: '0.05em' }}>
+          • ドラッグで360°回転
         </span>
-        <span style={{ fontSize: '0.7rem', color: '#666', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          • Scroll to Zoom
+        <span style={{ fontSize: '0.7rem', color: '#777', letterSpacing: '0.05em' }}>
+          • マウスホイール / ピンチで拡大・縮小
         </span>
       </div>
 
-      {/* 5. グラスモーダル（About & コンセプト解説パネル） */}
+      {/* 6. グラスモーダル（About & コンセプト解説パネル） */}
       {showAbout && (
         <div style={{
           position: 'absolute', top: 0, right: 0,
           width: isMobile ? '100%' : '440px',
           height: '100%',
-          background: 'rgba(15, 18, 24, 0.88)',
+          background: 'rgba(15, 18, 24, 0.92)',
           backdropFilter: 'blur(20px)',
           borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
           zIndex: 20,
           overflowY: 'auto',
           padding: '36px 28px',
           boxSizing: 'border-box',
-          color: '#e2e8f0',
-          animation: 'fadeIn 0.25s ease'
+          color: '#e2e8f0'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <span style={{ fontSize: '0.7rem', color: '#38bdf8', letterSpacing: '0.1em', fontWeight: 'bold' }}>PROJECT INSIGHT</span>
@@ -148,31 +215,40 @@ export default function App() {
             </button>
           </div>
 
-          <h2 style={{ fontSize: '1.3rem', fontWeight: '800', lineHeight: '1.4', marginBottom: '16px', color: '#fff' }}>
-            歯科現場の「不安」を「晴れ」に変える3Dインターフェース
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', lineHeight: '1.5', marginBottom: '16px', color: '#fff' }}>
+            言葉が届かないもどかしさを、<br />
+            「見て触れる安心」へ変える3Dインターフェース
           </h2>
 
-          <p style={{ fontSize: '0.85rem', lineHeight: '1.8', color: '#94a3b8', marginBottom: '24px' }}>
-            歯科現場における患者の心理的不安を解消するため、口腔内の3DアセットをWebブラウザ上で直感的にインタラクションできるシステムを開発。言葉や2Dの図解だけでは伝わらない患部の構造を自ら回転させて発見する体験へと昇華させました。
-          </p>
-
-          <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.06)', marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '0.85rem', color: '#38bdf8', margin: '0 0 8px 0' }}>ネーミングの由来</h3>
-            <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: '1.6', margin: 0 }}>
-              <b>晴れ（HARE）</b>：歯の健康を守り患者の心を晴れやかに。<br />
-              <b>ポンティック（Pontic）</b>：歯科業界用語の「架け橋（人工歯）」への敬意。
+          {/* 開発背景・原体験 */}
+          <div style={{ marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '0.75rem', color: '#38bdf8', letterSpacing: '0.08em', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+              Background & Vision
+            </h3>
+            <p style={{ fontSize: '0.82rem', lineHeight: '1.8', color: '#cbd5e1', margin: 0 }}>
+              開発のきっかけは、長年携わった在宅介護の現場でした。耳が遠くなった祖父に対し、訪問診療に来てくださる歯科医師や歯科衛生士の方々が、言葉だけで症状を伝える難しさに直面していました。
+              <br /><br />
+              「今、自分の口の中で何が起きているのか」が分からない恐怖は、患者を不安にさせます。「もし手元で直感的に動かし、拡大して確認できる3Dの架け橋があれば、祖父も納得して安心でき、医療従事者の負担も減らせたのではないか」。その切実な現場の課題意識から本システムを制作しました。
             </p>
           </div>
 
-          <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.06)', marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '0.85rem', color: '#38bdf8', margin: '0 0 8px 0' }}>技術スタック</h3>
-            <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: '1.6', margin: 0 }}>
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.06)', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '0.8rem', color: '#38bdf8', margin: '0 0 8px 0' }}>ネーミングの由来</h3>
+            <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>
+              <b>晴れ（HARE）</b>：病状の不安を晴らし、患者と家族の心を晴れやかに。<br />
+              <b>ポンティック（Pontic）</b>：歯科の専門用語で「架け橋（人工歯）」を意味する言葉。患者と医療現場を繋ぐ架け橋となる願いを込めています。
+            </p>
+          </div>
+
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.06)', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '0.8rem', color: '#38bdf8', margin: '0 0 8px 0' }}>技術スタック</h3>
+            <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>
               React / React Three Fiber / @react-three/drei / Three.js / Vite
             </p>
           </div>
 
-          <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '16px', fontSize: '0.7rem', color: '#64748b', lineHeight: '1.6' }}>
-            ※ 本システムは説明補助用のプロトタイプであり、医療機器としての診断・治療方針決定を行うものではありません。
+          <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '14px', fontSize: '0.68rem', color: '#64748b', lineHeight: '1.6' }}>
+            ※ 本システムは説明補助・相互理解のための試作したものであり、医療機器としての自動診断を行うものではありません。
           </div>
         </div>
       )}
