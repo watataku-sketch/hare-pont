@@ -1,235 +1,181 @@
 import React, { Suspense, useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, useGLTF, Stage, useProgress, Html } from '@react-three/drei'
+import { OrbitControls, useGLTF, Stage, useProgress, Html, Center } from '@react-three/drei'
 
+// --- ローディング画面 ---
 function Loader() {
   const { progress } = useProgress()
   return (
     <Html center>
-      <div style={{ color: '#0066cc', fontWeight: 'bold', width: '200px', textAlign: 'center' }}>
-        <div style={{ width: '100%', height: '4px', background: '#eee', borderRadius: '2px', overflow: 'hidden' }}>
-          <div style={{ width: `${progress}%`, height: '100%', background: '#0066cc', transition: '0.3s' }} />
+      <div style={{ color: '#fff', fontSize: '0.8rem', letterSpacing: '0.1em', textAlign: 'center', width: '160px' }}>
+        <div style={{ width: '100%', height: '2px', background: '#333', borderRadius: '1px', overflow: 'hidden', marginBottom: '8px' }}>
+          <div style={{ width: `${progress}%`, height: '100%', background: '#38bdf8', transition: '0.2s' }} />
         </div>
-        <p>Loading... {Math.round(progress)}%</p>
+        LOADING 3D ASSET {Math.round(progress)}%
       </div>
     </Html>
   )
 }
 
-// --- 1. 3Dモデルコンポーネント ---
+// --- 3Dモデル（Centerで確実にど真ん中へ固定） ---
 function HarePontModel() {
   const { scene } = useGLTF('/tooth_model.glb')
   return (
-    <group>
-      {/* scaleを1に。位置調整はStageコンポーネントに自動で任せるのが最も安定します */}
-      <primitive object={scene} scale={1} />
-    </group>
+    <Center top>
+      <primitive object={scene} />
+    </Center>
   )
 }
 
-// --- 2. メインの3D表示画面 (MainViewer) ---
-function MainViewer({ onAboutClick }) {
-  const [isMobile, setIsMobile] = useState(false);
+export default function App() {
+  const [showAbout, setShowAbout] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
   useEffect(() => {
-    const checkSize = () => setIsMobile(window.innerWidth < 600);
-    checkSize();
-    window.addEventListener('resize', checkSize);
-    return () => window.removeEventListener('resize', checkSize);
-  }, []);
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#ffffff', overflow: 'hidden' }}>
-      {/* ヘッダーロゴ & ボタン */}
-      <div style={{ 
-        position: 'absolute', top: isMobile ? 20 : 40, left: isMobile ? 15 : 40, 
-        width: isMobile ? 'calc(100% - 30px)' : 'auto',
-        display: 'flex', flexDirection: 'row', alignItems: 'center', 
-        zIndex: 10, pointerEvents: 'none', gap: isMobile ? '10px' : '20px'
+    <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#0a0b0e', overflow: 'hidden', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      
+      {/* 1. ヘッダー：プロダクトタイトル */}
+      <header style={{
+        position: 'absolute', top: 24, left: 24, zIndex: 10,
+        display: 'flex', flexDirection: 'column', gap: '4px', pointerEvents: 'none'
       }}>
-        <h1 style={{ 
-          margin: 0, fontSize: isMobile ? '1.7rem' : '3.5rem', 
-          fontWeight: '900', color: '#0066cc', letterSpacing: '-0.05em', pointerEvents: 'auto'
-        }}>
-          ハレポン
-        </h1>
-        <button 
-          onClick={onAboutClick}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: isMobile ? '1.2rem' : '1.5rem', fontWeight: '800', color: '#fff', letterSpacing: '-0.02em' }}>
+            HARE-PONT
+          </span>
+          <span style={{ fontSize: '0.65rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: '600' }}>
+            v1.0 / Web3D
+          </span>
+        </div>
+        <p style={{ margin: 0, fontSize: '0.75rem', color: '#888', letterSpacing: '0.05em' }}>
+          PREVENTIVE DENTAL BRIDGE INTERACTION
+        </p>
+      </header>
+
+      {/* 2. 右上アクションボタン */}
+      <div style={{ position: 'absolute', top: 24, right: 24, zIndex: 10 }}>
+        <button
+          onClick={() => setShowAbout(!showAbout)}
           style={{
-            background: 'white', border: '1px solid #0066cc', color: '#0066cc',
-            padding: isMobile ? '6px 12px' : '12px 24px', borderRadius: '30px', 
-            cursor: 'pointer', fontWeight: 'bold', fontSize: isMobile ? '0.7rem' : '1rem', 
-            pointerEvents: 'auto', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', whiteSpace: 'nowrap'
+            background: showAbout ? '#38bdf8' : 'rgba(255, 255, 255, 0.08)',
+            color: showAbout ? '#0a0b0e' : '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease'
           }}
         >
-          ハレポンとは？
+          {showAbout ? '✕ CLOSE' : 'INSIGHT & ABOUT ↗'}
         </button>
       </div>
 
-      {/* ★ 3D Canvas：カメラ設定を最適化 ★ */}
-      <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 45 }}>
-        <color attach="background" args={['#ffffff']} />
-       <Suspense fallback={<Loader />}>
-          {/* Stageの adjustCamera={1.8} と center で位置を完璧に固定 */}
-          <Stage 
-            environment="city" 
-            intensity={0.5} 
-            contactShadow={{ opacity: 0.4, blur: 2 }}
-            adjustCamera={1.8} 
-            center
+      {/* 3. 3Dキャンバス（完全に中央固定） */}
+      <Canvas
+        camera={{ position: [0, 0, 4.5], fov: 45 }}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <color attach="background" args={['#0a0b0e']} />
+        
+        <Suspense fallback={<Loader />}>
+          <Stage
+            environment="city"
+            intensity={0.6}
+            contactShadow={{ opacity: 0.6, blur: 2.5, color: '#000000' }}
+            adjustCamera={1.6}
           >
             <HarePontModel />
           </Stage>
         </Suspense>
 
-        {/* ★ OrbitControls：ズーム制限と平行移動禁止を追加 ★ */}
-        <OrbitControls 
-          makeDefault 
-          minDistance={3}    // これ以上近づけない（アップ防止）
-          maxDistance={10}   // これ以上遠ざけない
-          enablePan={false}  // モデルが画面外に逃げないように固定
-          minPolarAngle={0} 
-          maxPolarAngle={Math.PI / 1.75} 
+        <OrbitControls
+          makeDefault
+          enablePan={false}
+          minDistance={2.5}
+          maxDistance={8}
+          minPolarAngle={Math.PI / 4}
+          maxPolarAngle={Math.PI / 1.6}
         />
       </Canvas>
 
-      <div style={{ position: 'absolute', bottom: 20, width: '100%', textAlign: 'center', color: '#ccc', fontSize: '0.65rem' }}>
-        © 2026 HARE-PONT PROJECT. ALL RIGHTS RESERVED.
-      </div>
-    </div>
-  )
-}
-
-// --- 3. 説明ページ (AboutPage / LP) ---
-function AboutPage({ onBackClick }) {
-  // すべてのボックスで使い回す共通スタイル
-  const commonBoxStyle = {
-    width: '92%', maxWidth: '800px', margin: '0 auto 30px auto',
-    padding: '40px 20px', background: '#f4f8ff', // すべてのセクションをこの「優しい薄い青」に統一
-    borderRadius: '40px',
-    textAlign: 'center', boxSizing: 'border-box'
-  };
-
-  return (
-    <div style={{ 
-      width: '100vw', minHeight: '100vh', background: '#ffffff', 
-      fontFamily: 'sans-serif', color: '#333', overflowY: 'auto', paddingBottom: '60px'
-    }}>
-      {/* 固定閉じるボタン */}
-      <div style={{ 
-        position: 'sticky', top: 0, background: 'rgba(255,255,255,0.95)', 
-        backdropFilter: 'blur(10px)', padding: '15px 20px', 
-        display: 'flex', justifyContent: 'flex-end', zIndex: 100, borderBottom: '1px solid #f0f0f0'
+      {/* 4. 操作ガイド（フッター） */}
+      <div style={{
+        position: 'absolute', bottom: 20, left: 0, width: '100%',
+        textAlign: 'center', pointerEvents: 'none', zIndex: 5,
+        display: 'flex', justifyContent: 'center', gap: '15px'
       }}>
-        <button onClick={onBackClick} style={{ background: '#0066cc', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem' }}>
-          × 閉じる
-        </button>
+        <span style={{ fontSize: '0.7rem', color: '#666', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          • Drag to 360° Rotate
+        </span>
+        <span style={{ fontSize: '0.7rem', color: '#666', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          • Scroll to Zoom
+        </span>
       </div>
 
-      {/* 1. Hero */}
-      <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '900', lineHeight: '1.4', marginBottom: '15px', color: '#1a1a1a' }}>
-          歯科現場の「不安」を<br/>「晴れ」に変える、<br/>世界で一つの架け橋。
-        </h1>
-        <p style={{ fontSize: '0.9rem', color: '#0066cc', fontWeight: 'bold' }}>
-          Preventive Dental Bridge System<br/>（予防歯科・架け橋・システム）
-        </p>
-      </div>
-
-      {/* 2. Origin Section */}
-      <div style={commonBoxStyle}>
-        <h2 style={{ fontSize: '1.5rem', color: '#0066cc', marginBottom: '30px' }}>ネーミングの由来</h2>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '25px', fontWeight: 'bold' }}>HARE-PONT（ハレポン）に込めた想い</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          {[
-            { t: '晴れ（HARE）', d: '歯の健康を守り、患者様の心を晴れやかに。' },
-            { t: 'ポンティック（Pontic）', d: '歯科業界用語の「架け橋（人工歯）」への敬意。' },
-            { t: 'Pont / Pons', d: 'ラテン語で「橋」を意味する言葉。' }
-          ].map((item, i) => (
-            <div key={i} style={{ background: 'white', padding: '20px', borderRadius: '20px', boxShadow: '0 4px 10px rgba(0,102,204,0.05)' }}>
-              <h4 style={{ color: '#0066cc', margin: '0 0 8px 0', fontSize: '1.1rem' }}>{item.t}</h4>
-              <p style={{ fontSize: '0.85rem', margin: 0, color: '#666', lineHeight: '1.5' }}>{item.d}</p>
-            </div>
-          ))}
-        </div>
-        <p style={{ marginTop: '30px', fontSize: '1.2rem', fontWeight: 'bold', color: '#0066cc' }}>
-          「ハレポン ＝ 不安を晴らす架け橋」
-        </p>
-      </div>
-
-      {/* 3. Killer Experience Section (★背景色とテキスト色を統一修正！) ★ */}
-      <div style={{ ...commonBoxStyle, textAlign: 'left' }}>
-        <h2 style={{ fontSize: '1.5rem', color: '#0066cc', marginBottom: '20px', textAlign: 'center' }}>「自ら見つける」という、<br/>怖くて優しい体験。</h2>
-        <p style={{ fontSize: '1rem', lineHeight: '1.7', marginBottom: '30px', color: '#333' }}>
-          ハレポンの3D操作は、患者様自身が患部をグリグリと回して<b>「自分で発見する」</b>体験を提供します。<br/><br/>
-          人から言われた正論ではなく、自分で触れて見た「事実」だからこそ、<b>「納得」という最高の救い</b>へと変わります。
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          {/* カードも白背景に統一！ */}
-          <div style={{ background: 'white', padding: '20px', borderRadius: '20px', boxShadow: '0 4px 10px rgba(0,102,204,0.05)' }}>
-            <h4 style={{ color: '#0066cc', margin: '0 0 8px 0' }}>患者様にとって</h4>
-            <p style={{ fontSize: '0.85rem', margin: 0, color: '#666', lineHeight: '1.5' }}>「どこが悪いか」を直感。迷いが<b>「自発的な予防行動（通院・ケア）」</b>という確固たる意志に変わります。</p>
+      {/* 5. グラスモーダル（About & コンセプト解説パネル） */}
+      {showAbout && (
+        <div style={{
+          position: 'absolute', top: 0, right: 0,
+          width: isMobile ? '100%' : '440px',
+          height: '100%',
+          background: 'rgba(15, 18, 24, 0.88)',
+          backdropFilter: 'blur(20px)',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+          zIndex: 20,
+          overflowY: 'auto',
+          padding: '36px 28px',
+          boxSizing: 'border-box',
+          color: '#e2e8f0',
+          animation: 'fadeIn 0.25s ease'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <span style={{ fontSize: '0.7rem', color: '#38bdf8', letterSpacing: '0.1em', fontWeight: 'bold' }}>PROJECT INSIGHT</span>
+            <button
+              onClick={() => setShowAbout(false)}
+              style={{ background: 'transparent', border: 'none', color: '#999', fontSize: '1.2rem', cursor: 'pointer' }}
+            >
+              ✕
+            </button>
           </div>
-          <div style={{ background: 'white', padding: '20px', borderRadius: '20px', boxShadow: '0 4px 10px rgba(0,102,204,0.05)' }}>
-            <h4 style={{ color: '#0066cc', margin: '0 0 8px 0' }}>医院様にとって
-            </h4>
-            <p style={{ fontSize: '0.85rem', margin: 0, color: '#666', lineHeight: '1.5' }}>説明から「共感」へ。患者様のモチベーションが維持され、スタッフの負担軽減とリピート率向上を実現します。</p>
-          </div>
-        </div>
-      </div>
 
-      {/* 4. Features Section */}
-      <div style={commonBoxStyle}>
-        <h2 style={{ fontSize: '1.5rem', color: '#0066cc', marginBottom: '30px' }}>直感に訴えかける機能</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ textAlign: 'left', background: 'white', padding: '25px', borderRadius: '20px' }}>
-            <h3 style={{ borderLeft: '5px solid #0066cc', paddingLeft: '15px', fontSize: '1.1rem', color: '#0066cc', margin: '0 0 10px 0' }}>直感的な3D操作</h3>
-            <p style={{ color: '#666', fontSize: '0.85rem', lineHeight: '1.6' }}>自分の歯を自由に回転。空間的な自分事化を促し、深い納得感を生み出します。</p>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: '800', lineHeight: '1.4', marginBottom: '16px', color: '#fff' }}>
+            歯科現場の「不安」を「晴れ」に変える3Dインターフェース
+          </h2>
+
+          <p style={{ fontSize: '0.85rem', lineHeight: '1.8', color: '#94a3b8', marginBottom: '24px' }}>
+            歯科現場における患者の心理的不安を解消するため、口腔内の3DアセットをWebブラウザ上で直感的にインタラクションできるシステムを開発。言葉や2Dの図解だけでは伝わらない患部の構造を自ら回転させて発見する体験へと昇華させました。
+          </p>
+
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.06)', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '0.85rem', color: '#38bdf8', margin: '0 0 8px 0' }}>ネーミングの由来</h3>
+            <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: '1.6', margin: 0 }}>
+              <b>晴れ（HARE）</b>：歯の健康を守り患者の心を晴れやかに。<br />
+              <b>ポンティック（Pontic）</b>：歯科業界用語の「架け橋（人工歯）」への敬意。
+            </p>
           </div>
-          <div style={{ textAlign: 'left', background: 'white', padding: '25px', borderRadius: '20px' }}>
-            <h3 style={{ borderLeft: '5px solid #0066cc', paddingLeft: '15px', fontSize: '1.1rem', color: '#0066cc', margin: '0 0 10px 0' }}>悪い部分の表示</h3>
-            <p style={{ color: '#666', fontSize: '0.85rem', lineHeight: '1.6' }}>どこが虫歯なのかを3Dで再現。「放置する恐怖」を可視化し、早期通院の動機付けを強化します。</p>
+
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.06)', marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '0.85rem', color: '#38bdf8', margin: '0 0 8px 0' }}>技術スタック</h3>
+            <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: '1.6', margin: 0 }}>
+              React / React Three Fiber / @react-three/drei / Three.js / Vite
+            </p>
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '16px', fontSize: '0.7rem', color: '#64748b', lineHeight: '1.6' }}>
+            ※ 本システムは説明補助用のプロトタイプであり、医療機器としての診断・治療方針決定を行うものではありません。
           </div>
         </div>
-      </div>
-
-      {/* 5. Vision & Closing */}
-      <div style={commonBoxStyle}>
-        <h2 style={{ fontSize: '1.4rem', color: '#333', marginBottom: '20px', lineHeight: '1.4' }}>
-          「自分の歯」への理解が、<br/>クリニックの未来を変える
-        </h2>
-        <p style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.7', marginBottom: '30px' }}>
-          ハレポンは、三方がハレやかになるサイクルを目指します。<br/>
-          重症化前に来院が増えることで、院内の空気までも明るく変えていく。
-        </p>
-        <p style={{ fontSize: '0.85rem', color: '#666', lineHeight: '1.7', maxWidth: '300px', margin: '0 auto' }}>
-          私たちは、歯科医療を「痛くなってから行く場所」から、
-          「人生を晴れやかにするために行く場所」へアップデートします。
-        </p>
-      </div>
-
-{/* 6. Disclaimer Section (免責事項) */}
-      <div style={{ ...commonBoxStyle, background: '#f9f9f9', textAlign: 'left', padding: '30px' }}>
-        <h2 style={{ fontSize: '1.1rem', color: '#666', marginBottom: '20px', textAlign: 'center' }}>
-          【本システムのご利用にあたって】
-        </h2>
-        <p style={{ fontSize: '0.8rem', color: '#777', lineHeight: '1.6', marginBottom: '20px' }}>
-          本サービス「ハレポン」（以下「本システム」）は、歯科医師による診断結果を患者様へ視覚的に分かりやすく伝えるための<b>インフォームド・コンセント（説明補助）用コミュニケーションツール</b>です。ご利用に際しては、以下の事項に同意いただいたものとみなします。
-        </p>
-        <ul style={{ fontSize: '0.8rem', color: '#777', lineHeight: '1.8', paddingLeft: '20px', margin: 0 }}>
-          <li style={{ marginBottom: '10px' }}><b>非医療機器の明示:</b> 本システムは、画像診断、疾患の特定、または治療方針の決定を自動で行う「医療機器」ではありません。</li>
-          <li style={{ marginBottom: '10px' }}><b>医師の責任:</b> 本システムを用いた説明内容および最終的な診断、治療方針の決定は、必ず歯科医師自らの専門的知見と責任において行ってください。</li>
-          <li style={{ marginBottom: '10px' }}><b>免責事項:</b> 本システムの使用により生じた直接的、間接的な損害（診断の誤解、治療トラブル等）について、開発者は一切の責任を負いません。</li>
-          <li><b>試作版の扱い:</b> 本システムは現在開発中のプロトタイプ（ベータ版）であり、予告なく仕様変更やサービス停止を行う場合があります。</li>
-        </ul>
-      </div>
-
+      )}
     </div>
   )
-}
-
-// --- 4. メインのAppコンポーネント ---
-export default function App() {
-  const [page, setPage] = useState('home');
-  useEffect(() => { window.scrollTo(0, 0); }, [page]);
-  return <>{page === 'home' ? <MainViewer onAboutClick={() => setPage('about')} /> : <AboutPage onBackClick={() => setPage('home')} />}</>
 }
